@@ -1,5 +1,12 @@
 import streamlit as st
 import pandas as pd
+import sys
+import os
+
+# Add the current directory to the Python path
+# This helps Python find the utils module
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from utils.trail_finder import find_nearby_trails
 from utils.event_manager import get_upcoming_events
 from utils.biophilia_calculator import calculate_biophilia_score
@@ -115,7 +122,7 @@ elif page == "Find Trails":
                     st.write(f"**Distance:** {trail['distance']} miles away")
                     st.write(f"**Length:** {trail['length']} miles")
                     st.write(f"**Difficulty:** {trail['difficulty']}")
-                    st.write(f"**Features:** {', '.join(trail['features'])}")
+                    st.write(f"**Features:** {', '.join(trail['features'].split(','))}")
                     st.write(trail['description'])
                 with col2:
                     st.image(trail.get('image_url', 'https://i.imgur.com/3Cm5BM9.jpg'), width=200)
