@@ -1,6 +1,6 @@
 # NatureConnect
 
-![NatureConnect Logo](https://i.imgur.com/gJUcYCn.png)
+
 
 NatureConnect is a Streamlit web application that helps users improve their connection with nature by finding nearby trails, participating in nature events, and tracking their biophilia score.
 
