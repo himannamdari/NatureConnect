@@ -1,0 +1,219 @@
+/* Main theme colors */
+:root {
+  --primary: #2E7D32;      /* Forest Green */
+  --primary-light: #66BB6A;
+  --secondary: #81C784;    /* Light Green */
+  --accent: #FFC107;       /* Amber */
+  --water: #64B5F6;        /* Blue */
+  --text-dark: #263238;
+  --text-light: #FFFFFF;
+  --background: #F8F9FA;
+  --card-bg: #FFFFFF;
+}
+
+/* Base styling */
+.main {
+  background-color: var(--background);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-dark);
+}
+
+/* Title and header styling */
+h1, h2, h3 {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 3px solid var(--primary-light);
+  padding-bottom: 0.5rem;
+}
+
+h2 {
+  font-size: 1.8rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+h3 {
+  font-size: 1.3rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Sidebar styling */
+.css-1lcbmhc.e1fqkh3o0, .css-1v3fvcr.egzxvld1 {
+  background-color: var(--primary);
+  color: var(--text-light);
+}
+
+.sidebar .sidebar-content {
+  background-color: var(--primary);
+  color: var(--text-light);
+}
+
+/* Make sidebar text color white */
+.sidebar-content * {
+  color: var(--text-light) !important;
+}
+
+/* Style radio buttons in sidebar */
+.stRadio > div {
+  background-color: var(--primary-light);
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.stRadio label {
+  background-color: var(--card-bg);
+  padding: 8px 15px;
+  border-radius: 5px;
+  margin: 5px 0;
+  transition: all 0.3s;
+}
+
+.stRadio label:hover {
+  background-color: var(--secondary);
+  color: var(--text-light);
+}
+
+/* Buttons styling */
+.stButton > button {
+  background-color: var(--primary);
+  color: var(--text-light);
+  border: none;
+  border-radius: 5px;
+  padding: 8px 20px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.stButton > button:hover {
+  background-color: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Card styling for sections */
+.css-1r6slb0.e1tzin5v2 {
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+  border-left: 5px solid var(--primary);
+}
+
+/* Image styling */
+img {
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Info boxes styling */
+.stInfo {
+  background-color: var(--water);
+  color: var(--text-light);
+  padding: 15px;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+/* Success message styling */
+.stSuccess {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Warning message styling */
+.stWarning {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Progress bar styling */
+.stProgress > div > div {
+  background-color: var(--primary);
+}
+
+/* Slider styling */
+.stSlider {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* Footer styling */
+footer {
+  border-top: 1px solid var(--secondary);
+  padding-top: 1rem;
+  margin-top: 2rem;
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+
+/* Custom divider */
+.divider {
+  height: 3px;
+  background-color: var(--primary-light);
+  margin: 1.5rem 0;
+}
+
+/* Tabs styling */
+.stTabs [data-baseweb="tab-list"] {
+  gap: 10px;
+}
+
+.stTabs [data-baseweb="tab"] {
+  background-color: var(--background);
+  border-radius: 5px 5px 0 0;
+  padding: 10px 20px;
+  transition: all 0.3s;
+}
+
+.stTabs [aria-selected="true"] {
+  background-color: var(--primary);
+  color: var(--text-light);
+}
+
+/* Input fields styling */
+.stTextInput > div > div > input, .stTextArea > div > div > textarea {
+  border-radius: 5px;
+  border: 2px solid var(--primary-light);
+  padding: 10px;
+  transition: all 0.3s;
+}
+
+.stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
+}
+
+/* Trail and event cards styling */
+.card {
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+  border-left: 5px solid var(--primary);
+  transition: transform 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Logo container */
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.logo {
+  width: 120px;
+  height: 120px;
+}
