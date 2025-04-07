@@ -65,12 +65,10 @@ natureconnect/
 ├── data/                    # Data storage
 │   ├── sample_trails.csv    # Sample trail data
 │   └── sample_events.csv    # Sample event data
-└── pages/                   # Application page modules
-    ├── home.py              # Homepage
-    ├── trails.py            # Trails page
-    ├── events.py            # Events page
-    ├── biophilia.py         # Biophilia score page
-    └── profile.py           # User profile page
+└── tests/                   # Unit tests
+    ├── test_trail_finder.py
+    ├── test_event_manager.py
+    └── test_biophilia_calculator.py
 ```
 
 ## Deployment
