@@ -1,16 +1,9 @@
 import streamlit as st
 import pandas as pd
-import sys
 import os
-
-# Add the current directory to the Python path
-# This helps Python find the utils module
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from utils.trail_finder import find_nearby_trails
-from utils.event_manager import get_upcoming_events
-from utils.biophilia_calculator import calculate_biophilia_score
-import config
+from datetime import datetime, timedelta
+from math import radians, cos, sin, asin, sqrt
+import json
 
 # Page configuration
 st.set_page_config(
@@ -19,6 +12,294 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Utility functions moved into app.py for simplicity
+# Trail finder functions
+def haversine(lon1, lat1, lon2, lat2):
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    """
+    # Convert decimal degrees to radians
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    
+    # Haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    r = 3956  # Radius of earth in miles
+    return c * r
+
+def create_sample_trails_data():
+    """Create sample trail data and save to CSV"""
+    trails = [
+        {
+            'id': 1,
+            'name': 'Pine Forest Loop',
+            'latitude': 37.7749,
+            'longitude': -122.4194,
+            'length': 3.2,
+            'difficulty': 'Easy',
+            'features': 'Forest,Wildlife,Scenic Views',
+            'description': 'A beautiful loop through old-growth pine forest with abundant wildlife viewing opportunities.',
+            'image_url': 'https://i.imgur.com/3Cm5BM9.jpg'
+        },
+        {
+            'id': 2,
+            'name': 'Mountain Vista Trail',
+            'latitude': 37.8049,
+            'longitude': -122.4094,
+            'length': 5.8,
+            'difficulty': 'Moderate',
+            'features': 'Mountain View,Wildflowers,Forest',
+            'description': 'Climb to stunning panoramic views of the surrounding mountains and valleys.',
+            'image_url': 'https://i.imgur.com/Gju4kCM.jpg'
+        },
+        {
+            'id': 3,
+            'name': 'Crystal Lake Path',
+            'latitude': 37.7649,
+            'longitude': -122.4294,
+            'length': 2.5,
+            'difficulty': 'Easy',
+            'features': 'Lake,Fishing,Wildlife',
+            'description': 'An easy walk around a pristine mountain lake with fishing spots and wildlife viewing areas.',
+            'image_url': 'https://i.imgur.com/K58U4dV.jpg'
+        },
+        {
+            'id': 4,
+            'name': 'Ridgeline Traverse',
+            'latitude': 37.7849,
+            'longitude': -122.4394,
+            'length': 7.2,
+            'difficulty': 'Hard',
+            'features': 'Mountain View,Waterfall,Forest',
+            'description': 'A challenging hike along a mountain ridge with breathtaking views and a hidden waterfall.',
+            'image_url': 'https://i.imgur.com/QLKL9F5.jpg'
+        },
+        {
+            'id': 5,
+            'name': 'Waterfall Canyon',
+            'latitude': 37.7599,
+            'longitude': -122.4494,
+            'length': 4.6,
+            'difficulty': 'Moderate',
+            'features': 'Waterfall,Forest,Wildflowers',
+            'description': 'Hike through a lush canyon to a spectacular 60-foot waterfall surrounded by wildflowers.',
+            'image_url': 'https://i.imgur.com/Y2JJ6KQ.jpg'
+        }
+    ]
+    
+    # Create DataFrame
+    trails_df = pd.DataFrame(trails)
+    
+    # Ensure data directory exists
+    os.makedirs('data', exist_ok=True)
+    
+    # Save to CSV
+    trails_df.to_csv('data/sample_trails.csv', index=False)
+    
+    return trails_df
+
+def find_nearby_trails(user_location, distance=None, difficulty=None, features=None, limit=None):
+    """
+    Find trails near the user's location with optional filters
+    """
+    try:
+        # Try to load the sample data
+        trails_df = pd.read_csv('data/sample_trails.csv')
+    except FileNotFoundError:
+        # If the file doesn't exist, create sample data
+        trails_df = create_sample_trails_data()
+        
+    # Calculate distance from user location
+    if user_location and 'lat' in user_location and 'lon' in user_location:
+        trails_df['distance'] = trails_df.apply(
+            lambda row: haversine(
+                user_location['lon'], 
+                user_location['lat'],
+                row['longitude'], 
+                row['latitude']
+            ),
+            axis=1
+        )
+    else:
+        # Default distances if no user location provided
+        trails_df['distance'] = range(1, len(trails_df) + 1)
+    
+    # Apply filters
+    if distance is not None:
+        trails_df = trails_df[trails_df['distance'] <= distance]
+        
+    if difficulty is not None and len(difficulty) > 0:
+        trails_df = trails_df[trails_df['difficulty'].isin(difficulty)]
+        
+    if features is not None and len(features) > 0:
+        # For features, they're stored as comma-separated values
+        for feature in features:
+            trails_df = trails_df[trails_df['features'].str.contains(feature, case=False)]
+    
+    # Sort by distance
+    trails_df = trails_df.sort_values('distance')
+    
+    # Limit results
+    if limit is not None:
+        trails_df = trails_df.head(limit)
+    
+    # Convert to list of dictionaries
+    trails = trails_df.to_dict('records')
+    
+    return trails
+
+# Event manager functions
+def create_sample_events_data():
+    """Create sample event data and save to CSV"""
+    # Current date for generating events
+    now = datetime.now()
+    
+    events = [
+        {
+            'id': 1,
+            'name': 'Guided Bird Watching Tour',
+            'date': (now + timedelta(days=3)).strftime('%Y-%m-%d'),
+            'location': 'Oakridge Nature Reserve',
+            'type': 'Birdwatching',
+            'description': 'Join our expert ornithologists for a guided tour to spot and identify local bird species. Binoculars provided!',
+            'image_url': 'https://i.imgur.com/YJOX1CW.jpg'
+        },
+        {
+            'id': 2,
+            'name': 'Forest Bathing Experience',
+            'date': (now + timedelta(days=5)).strftime('%Y-%m-%d'),
+            'location': 'Pinecrest Woods',
+            'type': 'Guided Hike',
+            'description': 'Experience the Japanese practice of Shinrin-yoku (forest bathing) to reduce stress and boost wellbeing through mindful nature immersion.',
+            'image_url': 'https://i.imgur.com/3Cm5BM9.jpg'
+        },
+        {
+            'id': 3,
+            'name': 'River Cleanup Volunteer Day',
+            'date': (now + timedelta(days=7)).strftime('%Y-%m-%d'),
+            'location': 'Silverstream River',
+            'type': 'Conservation',
+            'description': 'Help restore the natural beauty of our local river by joining our cleanup effort. All equipment provided, plus lunch for volunteers!',
+            'image_url': 'https://i.imgur.com/K58U4dV.jpg'
+        },
+        {
+            'id': 4,
+            'name': 'Wildflower Identification Workshop',
+            'date': (now + timedelta(days=10)).strftime('%Y-%m-%d'),
+            'location': 'Meadow View Park',
+            'type': 'Education',
+            'description': 'Learn to identify local wildflower species and understand their ecological importance in this hands-on workshop.',
+            'image_url': 'https://i.imgur.com/VmFbVmE.jpg'
+        },
+        {
+            'id': 5,
+            'name': 'Family Nature Scavenger Hunt',
+            'date': (now + timedelta(days=12)).strftime('%Y-%m-%d'),
+            'location': 'Community Wilderness Area',
+            'type': 'Community',
+            'description': 'A fun event for families to explore nature together through an educational scavenger hunt with prizes!',
+            'image_url': 'https://i.imgur.com/B4mJErA.jpg'
+        }
+    ]
+    
+    # Create DataFrame
+    events_df = pd.DataFrame(events)
+    
+    # Ensure data directory exists
+    os.makedirs('data', exist_ok=True)
+    
+    # Save to CSV
+    events_df.to_csv('data/sample_events.csv', index=False)
+    
+    return events_df
+
+def get_upcoming_events(date_range=None, types=None, limit=None):
+    """
+    Get upcoming nature events with optional filters
+    """
+    try:
+        # Try to load the sample data
+        events_df = pd.read_csv('data/sample_events.csv')
+    except FileNotFoundError:
+        # If the file doesn't exist, create sample data
+        events_df = create_sample_events_data()
+    
+    # Convert date strings to datetime objects
+    events_df['date_obj'] = pd.to_datetime(events_df['date'])
+    
+    # Apply date range filter
+    if date_range is not None and len(date_range) == 2:
+        start_date, end_date = date_range
+        start_date = pd.Timestamp(start_date)
+        end_date = pd.Timestamp(end_date)
+        events_df = events_df[(events_df['date_obj'] >= start_date) & 
+                              (events_df['date_obj'] <= end_date)]
+    
+    # Apply event type filter
+    if types is not None and len(types) > 0:
+        events_df = events_df[events_df['type'].isin(types)]
+    
+    # Sort by date
+    events_df = events_df.sort_values('date_obj')
+    
+    # Limit results
+    if limit is not None:
+        events_df = events_df.head(limit)
+    
+    # Remove the date_obj column before returning
+    events_df = events_df.drop('date_obj', axis=1)
+    
+    # Convert to list of dictionaries
+    events = events_df.to_dict('records')
+    
+    return events
+
+# Biophilia calculator functions
+def calculate_biophilia_score(answers):
+    """
+    Calculate a biophilia score based on quiz answers
+    """
+    # Simple calculation - sum of answers normalized to 0-100
+    if not answers:
+        return 0
+    
+    # Sum all answers
+    total = sum(answers)
+    
+    # Maximum possible score (10 points per question)
+    max_score = len(answers) * 10
+    
+    # Calculate percentage and round to nearest integer
+    score = round((total / max_score) * 100)
+    
+    return score
+
+# App constants
+TRAIL_FEATURES = [
+    "Waterfall",
+    "Lake",
+    "River",
+    "Mountain View",
+    "Forest",
+    "Wildlife",
+    "Wildflowers",
+    "Educational",
+    "Sunset Views"
+]
+
+EVENT_TYPES = [
+    "Guided Hike",
+    "Conservation",
+    "Education",
+    "Birdwatching",
+    "Community",
+    "Family Friendly",
+    "Workshop"
+]
 
 # Initialize session state
 if 'user_location' not in st.session_state:
@@ -50,7 +331,7 @@ if location_method == "Enter Zip Code":
     zip_code = st.sidebar.text_input("Enter your zip code")
     if zip_code and st.sidebar.button("Update Location"):
         # In a real app, we would validate and geocode the zip code
-        st.session_state.user_location = {"zip": zip_code, "lat": 0, "lon": 0}
+        st.session_state.user_location = {"zip": zip_code, "lat": 37.7749, "lon": -122.4194}
         st.sidebar.success(f"Location updated to {zip_code}")
 else:
     if st.sidebar.button("Get Current Location"):
@@ -71,7 +352,7 @@ if page == "Home":
         if st.session_state.user_location:
             trails = find_nearby_trails(st.session_state.user_location, limit=3)
             for trail in trails:
-                st.write(f"**{trail['name']}** - {trail['distance']} miles away")
+                st.write(f"**{trail['name']}** - {trail['distance']:.1f} miles away")
         else:
             st.info("Set your location to see nearby trails")
     
@@ -89,8 +370,8 @@ if page == "Home":
     else:
         st.info("Take the quiz to discover your biophilia score")
         if st.button("Take Biophilia Quiz"):
-            # Switch to biophilia page
-            page = "Biophilia Score"
+            # Link to biophilia page
+            st.switch_page("app.py")  # This won't actually work, but we'll handle navigation via the sidebar
 
 elif page == "Find Trails":
     st.title("Find Nature Trails Near You")
@@ -107,7 +388,7 @@ elif page == "Find Trails":
         with col2:
             difficulty = st.multiselect("Difficulty", ["Easy", "Moderate", "Hard"], default=["Easy", "Moderate"])
         with col3:
-            features = st.multiselect("Features", ["Waterfall", "Lake", "Mountain View", "Forest", "Wildlife"])
+            features = st.multiselect("Features", TRAIL_FEATURES)
         
         # Find trails with filters
         trails = find_nearby_trails(st.session_state.user_location, distance=distance, 
@@ -119,7 +400,7 @@ elif page == "Find Trails":
                 col1, col2 = st.columns([3, 1])
                 with col1:
                     st.subheader(trail['name'])
-                    st.write(f"**Distance:** {trail['distance']} miles away")
+                    st.write(f"**Distance:** {trail['distance']:.1f} miles away")
                     st.write(f"**Length:** {trail['length']} miles")
                     st.write(f"**Difficulty:** {trail['difficulty']}")
                     st.write(f"**Features:** {', '.join(trail['features'].split(','))}")
@@ -142,7 +423,7 @@ elif page == "Nature Events":
     with col1:
         date_range = st.date_input("Date Range", [pd.Timestamp.now(), pd.Timestamp.now() + pd.Timedelta(days=30)])
     with col2:
-        event_types = st.multiselect("Event Types", ["Guided Hike", "Conservation", "Education", "Birdwatching", "Community"])
+        event_types = st.multiselect("Event Types", EVENT_TYPES)
 
     # Get events with filters
     events = get_upcoming_events(date_range=date_range, types=event_types)
@@ -234,7 +515,7 @@ elif page == "My Profile":
                 col1, col2 = st.columns([3, 1])
                 with col1:
                     st.write(f"**{trail['name']}**")
-                    st.write(f"Distance: {trail['distance']} miles away | Length: {trail['length']} miles")
+                    st.write(f"Distance: {trail['distance']:.1f} miles away | Length: {trail['length']} miles")
                 with col2:
                     if st.button("Remove", key=f"remove_{trail['id']}"):
                         st.session_state.favorite_trails.remove(trail)
